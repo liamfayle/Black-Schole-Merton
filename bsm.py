@@ -129,6 +129,7 @@ class BsmOption:
             raise ValueError('Unrecognized type')
 
 
-
+    def set_sigma(self, sigma):
+        self.sigma = sigma
 
 
