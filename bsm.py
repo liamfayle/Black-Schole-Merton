@@ -275,6 +275,7 @@ class OptionPosition:
         value = 0
         for leg in self.legs:
             value += leg.delta()
+        value += (self.shares/100)
         return value
 
     def gamma(self):
