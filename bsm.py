@@ -299,8 +299,7 @@ class OptionPosition:
         '''
         value = 0
         for leg in self.legs:
-            value += abs(leg.sigma)
-            print(leg.sigma)
+            value += leg.sigma
         return value / len(self.legs)
 
 
