@@ -206,10 +206,6 @@ class BsmOption:
 
 
 '''
-    Constraints
-        >Assumes all options have same DTE when calling updateDTE()
-        >Assumes all options have same volatility
-
     TODO
         >Add selector for individual option
             *Can then call indivudal update functions that option
@@ -218,6 +214,7 @@ class BsmOption:
 class OptionPosition:
     def __init__(self):
         self.legs = []
+        self.shares = 0
         pass
 
 
@@ -228,6 +225,20 @@ class OptionPosition:
         '''
         for option in options:
             self.legs.append(option)
+
+    def addShares(self, shares):
+        '''
+        shares -> Num shares \n
+        adds shares to position
+        '''
+        self.shares += shares
+
+    def removeShares(self, shares):
+        '''
+        shares -> Num shares \n
+        removes shares from position
+        '''
+        self.shares -= shares
 
     def removeLeg(self, option):
         '''
@@ -340,4 +351,15 @@ class OptionPosition:
 
 
 
-
+'''
+position = OptionPosition()
+call = BsmOption(False, 'C', 15.00, 15, 53, 0.01, value=1.75)
+put = BsmOption(False, 'P', 15.00, 15, 53, 0.01, value=1.68)
+position.addLegs([call, put])
+print("Price = " + str(position.price()))
+print("Sigma = " + str(position.sigma()))
+print("Delta = " + str(position.delta()))
+print("Gamma = " + str(position.gamma()))
+print("Vega  = " + str(position.vega()))
+print("Theta = " + str(position.theta()))
+print("Rho   = " + str(position.rho()))'''
