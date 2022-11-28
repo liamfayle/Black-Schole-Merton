@@ -239,6 +239,15 @@ class OptionPosition:
         except Exception as e:
             print(e)
 
+    def getLeg(self, index):
+        '''
+        Get leg at specified index
+        '''
+        if (index > len(self.legs)):
+            raise Exception("Cannot get index greater than size")
+
+        return self.legs[index]
+
     def price(self):
         '''
         Returns current theoretical price of position
