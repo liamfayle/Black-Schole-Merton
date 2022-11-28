@@ -3,7 +3,10 @@ import scipy.stats
 from scipy.stats import norm
 import numpy as np
 
-
+'''
+    TODO
+        >THETA Greek is wrong (I dont know why)
+'''
 class BsmOption:
     def __init__(self, isLong, Type, S, K, T, r, sigma=-1.0, value=-1.0, q=0.0):
         '''
@@ -67,6 +70,7 @@ class BsmOption:
         '''
         https://en.wikipedia.org/wiki/Newton%27s_method
         Get approximate sigma using Newton Raphson Method for root finding
+        Iterates until 0.1% accuracy
         '''
         sigma_i_1 = 0
         sigma_i = 1 #arbitrary guess
@@ -77,6 +81,7 @@ class BsmOption:
             self.setSigma(sigma_i)
 
             if ( abs((self.value - self.price()) /  self.value) < 0.001 ):
+                self.setSigma(abs(sigma_i))
                 return
 
 
@@ -160,9 +165,9 @@ class BsmOption:
         '''
         rho = 0
         if self.Type == 'C':
-            return self.K * self.T * np.exp(-self.r * self.T) * self.N(self.d2())
+            rho = self.K * self.T * np.exp(-self.r * self.T) * self.N(self.d2())
         if self.Type == 'P':
-            return -self.K * self.T * np.exp(-self.r * self.T) * self.N(-self.d2())
+            rho = -self.K * self.T * np.exp(-self.r * self.T) * self.N(-self.d2())
         
         if (self.isLong):
             return rho
@@ -208,6 +213,7 @@ class BsmOption:
     TODO
         >Add selector for individual option
             *Can then call indivudal update functions that option
+        >Bug with greeks (delta & gamma) when init with market price rather than vol
 '''
 class OptionPosition:
     def __init__(self):
@@ -215,12 +221,13 @@ class OptionPosition:
         pass
 
 
-    def addLeg(self, option):
+    def addLegs(self, options):
         '''
-        option -> BSM option object \n
+        option -> BSM option object LIST \n
         adds option leg to position
         '''
-        self.legs.append(option)
+        for option in options:
+            self.legs.append(option)
 
     def removeLeg(self, option):
         '''
@@ -232,7 +239,7 @@ class OptionPosition:
         except Exception as e:
             print(e)
 
-    def positionValue(self):
+    def price(self):
         '''
         Returns current theoretical price of position
         '''
@@ -241,7 +248,7 @@ class OptionPosition:
             value += leg.price()
         return value
 
-    def positionDelta(self):
+    def delta(self):
         '''
         Returns current delta of position
         '''
@@ -250,7 +257,7 @@ class OptionPosition:
             value += leg.delta()
         return value
 
-    def positionGamma(self):
+    def gamma(self):
         '''
         Returns current gamma of position
         '''
@@ -259,7 +266,7 @@ class OptionPosition:
             value += leg.gamma()
         return value
 
-    def positionVega(self):
+    def vega(self):
         '''
         Returns current vega of position
         '''
@@ -268,7 +275,7 @@ class OptionPosition:
             value += leg.vega()
         return value
 
-    def positionTheta(self):
+    def theta(self):
         '''
         Returns current theta of position
         '''
@@ -277,7 +284,7 @@ class OptionPosition:
             value += leg.theta()
         return value
 
-    def positionRho(self):
+    def rho(self):
         '''
         Returns current rho of position
         '''
@@ -286,13 +293,14 @@ class OptionPosition:
             value += leg.rho()
         return value
 
-    def positionSigma(self):
+    def sigma(self):
         '''
         Returns average sigma of position
         '''
         value = 0
         for leg in self.legs:
-            value += leg.sigma()
+            value += abs(leg.sigma)
+            print(leg.sigma)
         return value / len(self.legs)
 
 
@@ -316,12 +324,19 @@ class OptionPosition:
     
 
 
-option = BsmOption(True, 'C', 8.86, 10, 18, 0.06, value=2.70)
-print("Price = " + str(option.price()))
-print("Sigma = " + str(option.sigma))
-print("Delta = " + str(option.delta()))
-print("Gamma = " + str(option.gamma()))
-print("Vega  = " + str(option.vega()))
-print("Theta = " + str(option.theta()))
-print("Rho   = " + str(option.rho()))
+position = OptionPosition()
+
+
+call = BsmOption(False, 'C', 15.00, 15, 53, 0.05, value=1.75)
+put = BsmOption(False, 'P', 15.00, 15, 53, 0.05, value=1.68)
+
+position.addLegs([call, put])
+
+print("Price = " + str(position.price()))
+print("Sigma = " + str(position.sigma()))
+print("Delta = " + str(position.delta()))
+print("Gamma = " + str(position.gamma()))
+print("Vega  = " + str(position.vega()))
+print("Theta = " + str(position.theta()))
+print("Rho   = " + str(position.rho()))
 
