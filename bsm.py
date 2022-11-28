@@ -1,23 +1,45 @@
+import scipy
+import scipy.stats
 from scipy.stats import norm
 import numpy as np
 
 
 class BsmOption:
-    def __init__(self, S, K, T, r, sigma, q=0):
+    def __init__(self, isLong, Type, S, K, T, r, sigma=-1.0, value=-1.0, q=0.0):
         '''
+        NOTE Only sigma OR value should be passed to the constructor
+
+        isLong -> Long / short          [bool]          [False]         Short the option
+        Type -> 'P' or 'C'              [Char]          ['P']           Put option
         S -> Underlying Price           [$]             [100]           100$ Underlying                 \n
         K -> Strike                     [$]             [110]           110$ Strike                     \n
         T -> Time until expiration      [Decimal]       [20]            20 DTE                          \n
         r -> Risk free rate             [Decimal]       [0.01]          1% RFR Continous yield          \n
         sigma -> Volatility             [Decimal]       [0.45]          45% Vol                         \n
+        value -> Option Price           [$]             [1.56]          1.56$                           \n
         q -> Dividend Value             [Decimal]       [0.01]          1% Continous Div yield            
         '''
+        self.isLong = isLong
+        self.Type = Type.upper()
         self.S = S 
         self.K = K
         self.T = T / 365
         self.r = r
-        self.sigma = sigma
         self.q = q
+        self.sigma = sigma
+        self.value = value
+
+        #Get sigma from market price
+        if (sigma < 0.0):
+            self.NewtonRaphson()
+
+        if (value < 0.0):
+            self.value = self.price()
+
+        if (type(self.isLong) is not bool or type(self.Type) is not str):
+            raise ValueError('Incorrect types for constructor')
+        if ( not (self.Type == 'P' or self.Type == 'C')):
+            raise ValueError('Must be "P" or "C"')
 
     
     @staticmethod
@@ -30,12 +52,32 @@ class BsmOption:
 
     @property
     def params(self):
-        return {'S': self.S,
+        return {'isLong': self.isLong,
+                'Type': self.Type,
+                'S': self.S,
                 'K': self.K,
                 'T': self.T,
                 'r': self.r,
                 'sigma': self.sigma,
+                'value': self.value,
                 'q': self.q}
+
+
+    def NewtonRaphson(self):
+        '''
+        https://en.wikipedia.org/wiki/Newton%27s_method
+        Get approximate sigma using Newton Raphson Method for root finding
+        '''
+        sigma_i_1 = 0
+        sigma_i = 1 #arbitrary guess
+        self.setSigma(sigma_i)
+        while 1:
+            sigma_i_1 = sigma_i - ((self.price() - self.value) / (self.vega()))
+            sigma_i = sigma_i_1
+            self.setSigma(sigma_i)
+
+            if ( abs((self.value - self.price()) /  self.value) < 0.001 ):
+                return
 
 
     def d1(self):
@@ -45,90 +87,242 @@ class BsmOption:
         return self.d1() - self.sigma*np.sqrt(self.T)
     
     def _call_value(self):
-        return self.S*np.exp(-self.q*self.T)*self.N(self.d1()) - self.K*np.exp(-self.r*self.T) * self.N(self.d2())
+        call_value = self.S*np.exp(-self.q*self.T)*self.N(self.d1()) - self.K*np.exp(-self.r*self.T) * self.N(self.d2())
+        if (self.isLong):
+            return call_value
+        return -1 * call_value
                     
     def _put_value(self):
-        return self.K*np.exp(-self.r*self.T) * self.N(-self.d2()) - self.S*np.exp(-self.q*self.T)*self.N(-self.d1())
+        put_value = self.K*np.exp(-self.r*self.T) * self.N(-self.d2()) - self.S*np.exp(-self.q*self.T)*self.N(-self.d1())
+        if (self.isLong):
+            return put_value
+        return -1 * put_value
 
-    def delta(self, type_):
+    def delta(self):
         '''
         Return Delta Greek Value \n
-        C -> CAll \n
-        P -> PUT \n
-        B -> BOTH \n
         '''
-        if type_ == 'C':
-            return self.N(self.d1())
-        if type_ == 'P':
-            return self.delta('C') - 1
-        if type_ == 'B':
-            return  {'call': self.delta('C'), 'put': self.delta('P')}
-        else:
-            raise ValueError('Unrecognized type')
+        delta = 0
+        if self.Type == 'C':
+            delta = self.N(self.d1())
+        if self.Type == 'P':
+            delta = self.N(self.d1()) - 1
+
+        if (self.isLong):
+            return delta
+
+        return delta * -1
+        
         
 
     def gamma(self):
         '''
         Return Gamma Greek Value \n
         '''
-        return (self.N_prime(self.d1())) / (self.S * self.sigma * np.sqrt(self.T))
+        gamma =  (self.N_prime(self.d1())) / (self.S * self.sigma * np.sqrt(self.T))
+
+        if (self.isLong):
+            return gamma
+
+        return gamma * -1
 
     def vega(self):
         '''
         Return Delta Greek Value \n
         '''
-        return self.S * self.N_prime(self.d1()) * np.sqrt(self.T)
+        vega = self.S * self.N_prime(self.d1()) * np.sqrt(self.T)
+
+        if (self.isLong):
+            return vega
+
+        return vega * -1
 
 
-    def theta(self, type_):
+    def theta(self):
         '''
-        Return Delta Greek Value \n
-        C -> CAll \n
-        P -> PUT \n
-        B -> BOTH \n
+        Return theta Greek Value \n
         '''
-        if type_ == 'C':
-            return ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) - (self.r * self.K * np.exp(-self.r * self.T) * self.N(self.d2()))
-        if type_ == 'P':
-            return ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) + (self.r * self.K * np.exp(-self.r * self.T) * self.N(-self.d2()))
-        if type_ == 'B':
-            return  {'call': self.theta('C'), 'put': self.theta('P')}
-        else:
-            raise ValueError('Unrecognized type')
+        theta = 0
+        if self.Type == 'C':
+            theta = ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) - (self.r * self.K * np.exp(-self.r * self.T) * self.N(self.d2()))
+        if self.Type == 'P':
+            theta = ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) + (self.r * self.K * np.exp(-self.r * self.T) * self.N(-self.d2()))
+        
+        if (self.isLong):
+            return theta
+
+        return theta * -1
 
 
-    def rho(self, type_):
+    def rho(self):
         '''
         Return rho Greek Value \n
-        C -> CAll \n
-        P -> PUT \n
-        B -> BOTH \n
         '''
-        if type_ == 'C':
+        rho = 0
+        if self.Type == 'C':
             return self.K * self.T * np.exp(-self.r * self.T) * self.N(self.d2())
-        if type_ == 'P':
+        if self.Type == 'P':
             return -self.K * self.T * np.exp(-self.r * self.T) * self.N(-self.d2())
-        if type_ == 'B':
-            return  {'call': self.rho('C'), 'put': self.rho('P')}
-        else:
-            raise ValueError('Unrecognized type')
+        
+        if (self.isLong):
+            return rho
+        
+        return rho * -1
     
-    def price(self, type_ = 'C'):
+    def price(self):
         '''
-        C -> CAll \n
-        P -> PUT \n
-        B -> BOTH \n
+        Return price of option \n
         '''
-        if type_ == 'C':
+        if self.Type == 'C':
             return self._call_value()
-        if type_ == 'P':
+        if self.Type == 'P':
             return self._put_value() 
-        if type_ == 'B':
-            return  {'call': self._call_value(), 'put': self._put_value()}
-        else:
-            raise ValueError('Unrecognized type')
 
 
+    def setSpot(self, spot):
+        '''
+        Sets new spot price
+        '''
+        self.S = spot
+
+    def setDTE(self, DTE):
+        '''
+        Sets new DTE
+        '''
+        self.T = DTE / 365
+
+    def setSigma(self, sigma):
+        '''
+        Sets new volatility value
+        '''
+        self.sigma = sigma
+
+
+
+'''
+    Constraints
+        >Assumes all options have same DTE when calling updateDTE()
+        >Assumes all options have same volatility
+
+    TODO
+        >Add selector for individual option
+            *Can then call indivudal update functions that option
+'''
+class OptionPosition:
+    def __init__(self):
+        self.legs = []
+        pass
+
+
+    def addLeg(self, option):
+        '''
+        option -> BSM option object \n
+        adds option leg to position
+        '''
+        self.legs.append(option)
+
+    def removeLeg(self, option):
+        '''
+        option -> BSM option object to be removed
+        Removes leg from position
+        '''
+        try:
+            self.legs.remove(option)
+        except Exception as e:
+            print(e)
+
+    def positionValue(self):
+        '''
+        Returns current theoretical price of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.price()
+        return value
+
+    def positionDelta(self):
+        '''
+        Returns current delta of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.delta()
+        return value
+
+    def positionGamma(self):
+        '''
+        Returns current gamma of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.gamma()
+        return value
+
+    def positionVega(self):
+        '''
+        Returns current vega of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.vega()
+        return value
+
+    def positionTheta(self):
+        '''
+        Returns current theta of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.theta()
+        return value
+
+    def positionRho(self):
+        '''
+        Returns current rho of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.rho()
+        return value
+
+    def positionSigma(self):
+        '''
+        Returns average sigma of position
+        '''
+        value = 0
+        for leg in self.legs:
+            value += leg.sigma()
+        return value / len(self.legs)
+
+
+    def updateDTE(self, DTE):
+        '''
+        Updates DTE of !ALL! options in position
+        '''
+        for leg in self.legs:
+            leg.setDTE(DTE)
+
+    def updateSigma(self, DTE):
+        '''
+        Updates DTE of !ALL! options in position
+        '''
+        for leg in self.legs:
+            leg.setDTE(DTE)
+
+    
+
+
+    
+
+
+option = BsmOption(True, 'C', 8.86, 10, 18, 0.06, value=2.70)
+print("Price = " + str(option.price()))
+print("Sigma = " + str(option.sigma))
+print("Delta = " + str(option.delta()))
+print("Gamma = " + str(option.gamma()))
+print("Vega  = " + str(option.vega()))
+print("Theta = " + str(option.theta()))
+print("Rho   = " + str(option.rho()))
 
 
 
