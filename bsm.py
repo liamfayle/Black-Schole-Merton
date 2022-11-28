@@ -179,6 +179,7 @@ class BsmOption:
             return self._put_value() 
 
 
+
     def setSpot(self, spot):
         '''
         Sets new spot price
@@ -323,6 +324,4 @@ print("Gamma = " + str(option.gamma()))
 print("Vega  = " + str(option.vega()))
 print("Theta = " + str(option.theta()))
 print("Rho   = " + str(option.rho()))
-
-
 
