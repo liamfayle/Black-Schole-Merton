@@ -326,6 +326,13 @@ class OptionPosition:
         for leg in self.legs:
             leg.setDTE(DTE)
 
+    def updateSpot(self, spot):
+        '''
+        Updates Spot price of !ALL! options in position
+        '''
+        for leg in self.legs:
+            leg.setSpot(spot)
+
     
 
 
