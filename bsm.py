@@ -324,7 +324,7 @@ class OptionPosition:
         Updates DTE of !ALL! options in position
         '''
         for leg in self.legs:
-            leg.setDTE(DTE)
+            leg.setSigma(DTE)
 
     def updateSpot(self, spot):
         '''
