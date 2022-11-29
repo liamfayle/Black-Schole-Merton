@@ -98,7 +98,7 @@ class BsmOption:
         return -1 * call_value
                     
     def _put_value(self):
-        put_value = self.K*np.exp(-self.r*self.T) * self.N(-self.d2()) - self.S*np.exp(-self.q*self.T)*self.N(-self.d1())
+        put_value = (self.K*np.exp(-self.r*self.T) * self.N(-self.d2())) - (self.S*np.exp(-self.q*self.T)*self.N(-self.d1()))
         if (self.isLong):
             return put_value
         return -1 * put_value
@@ -109,9 +109,9 @@ class BsmOption:
         '''
         delta = 0
         if self.Type == 'C':
-            delta = self.N(self.d1())
+            delta = np.exp(-self.q * self.T) * self.N(self.d1())
         if self.Type == 'P':
-            delta = self.N(self.d1()) - 1
+            delta = -np.exp(-self.q * self.T) * self.N(-self.d1())
 
         if (self.isLong):
             return delta
@@ -124,7 +124,7 @@ class BsmOption:
         '''
         Return Gamma Greek Value \n
         '''
-        gamma =  (self.N_prime(self.d1())) / (self.S * self.sigma * np.sqrt(self.T))
+        gamma =  np.exp(-self.q * self.T) * ((self.N_prime(self.d1())) / (self.S * self.sigma * np.sqrt(self.T)))
 
         if (self.isLong):
             return gamma
@@ -135,7 +135,7 @@ class BsmOption:
         '''
         Return Delta Greek Value \n
         '''
-        vega = self.S * self.N_prime(self.d1()) * np.sqrt(self.T)
+        vega = self.S * np.exp(-self.q * self.T) * self.N_prime(self.d1()) * np.sqrt(self.T)
 
         if (self.isLong):
             return vega
@@ -149,9 +149,9 @@ class BsmOption:
         '''
         theta = 0
         if self.Type == 'C':
-            theta = ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) - (self.r * self.K * np.exp(-self.r * self.T) * self.N(self.d2()))
+            theta = (-np.exp(-self.q * self.T) * ((self.S * self.N_prime(self.d1()) * self.sigma)/(2 * np.sqrt(self.T)))) - (self.r * self.K * np.exp(-self.r * self.T) * self.N(self.d2())) + (self.q * self.S * np.exp(-self.q * self.T) * self.N(self.d1()))
         if self.Type == 'P':
-            theta = ( - (self.S * self.N_prime(self.d1()) * self.sigma) / (2 * np.sqrt(self.T)) ) + (self.r * self.K * np.exp(-self.r * self.T) * self.N(-self.d2()))
+            theta = (-np.exp(-self.q * self.T) * ((self.S * self.N_prime(self.d1()) * self.sigma)/(2 * np.sqrt(self.T)))) + (self.r * self.K * np.exp(-self.r * self.T) * self.N(-self.d2())) - (self.q * self.S * np.exp(-self.q * self.T) * self.N(-self.d1()))
         
         if (self.isLong):
             return theta
@@ -352,15 +352,4 @@ class OptionPosition:
 
 
 
-'''
-position = OptionPosition()
-call = BsmOption(False, 'C', 15.00, 15, 53, 0.01, value=1.75)
-put = BsmOption(False, 'P', 15.00, 15, 53, 0.01, value=1.68)
-position.addLegs([call, put])
-print("Price = " + str(position.price()))
-print("Sigma = " + str(position.sigma()))
-print("Delta = " + str(position.delta()))
-print("Gamma = " + str(position.gamma()))
-print("Vega  = " + str(position.vega()))
-print("Theta = " + str(position.theta()))
-print("Rho   = " + str(position.rho()))'''
+
