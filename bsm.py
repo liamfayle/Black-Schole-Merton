@@ -75,10 +75,9 @@ class BsmOption:
         sigma_i = 1 #arbitrary guess
         self.setSigma(sigma_i)
         while 1:
-            sigma_i_1 = sigma_i - ((self.price() - self.value) / (self.vega()))
+            sigma_i_1 = sigma_i - ((self.price() - self.value) / (self.vega() * 100))
             sigma_i = sigma_i_1
             self.setSigma(sigma_i)
-
             if ( abs((self.value - self.price()) /  self.value) < 0.001 ):
                 self.setSigma(abs(sigma_i))
                 return
@@ -359,17 +358,8 @@ class OptionPosition:
 
 
 position = OptionPosition()
-option = BsmOption(True, 'C', 15.5, 15, 53, 0.05, sigma=0.636)
-
-print("Price = " + str(option.price()))
-print("Sigma = " + str(option.sigma))
-print("Delta = " + str(option.delta()))
-print("Gamma = " + str(option.gamma()))
-print("Vega  = " + str(option.vega()))
-print("Theta = " + str(option.theta()))
-print("Rho   = " + str(option.rho()))
-
-'''put = BsmOption(False, 'P', 15.00, 15, 53, 0.01, value=1.68)
+call = BsmOption(True, 'C', 15, 15, 53, 0.05, value=1.75)
+put = BsmOption(False, 'P', 15, 15, 53, 0.05, value=1.68)
 position.addLegs([call, put])
 print("Price = " + str(position.price()))
 print("Sigma = " + str(position.sigma()))
@@ -377,4 +367,4 @@ print("Delta = " + str(position.delta()))
 print("Gamma = " + str(position.gamma()))
 print("Vega  = " + str(position.vega()))
 print("Theta = " + str(position.theta()))
-print("Rho   = " + str(position.rho()))'''
+print("Rho   = " + str(position.rho()))
