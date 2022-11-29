@@ -136,6 +136,8 @@ class BsmOption:
         '''
         vega = self.S * np.exp(-self.q * self.T) * self.N_prime(self.d1()) * np.sqrt(self.T)
 
+        vega /= 100 #adjustment factor to single share
+
         if (self.isLong):
             return vega
 
@@ -170,6 +172,8 @@ class BsmOption:
         if self.Type == 'P':
             rho = -self.K * self.T * np.exp(-self.r * self.T) * self.N(-self.d2())
         
+        rho /= 100 #adjustment factor to single share
+
         if (self.isLong):
             return rho
         
