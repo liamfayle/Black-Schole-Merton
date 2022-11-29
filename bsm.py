@@ -1,5 +1,3 @@
-import scipy
-import scipy.stats
 from scipy.stats import norm
 import numpy as np
 
@@ -185,8 +183,7 @@ class BsmOption:
         if self.Type == 'C':
             return self._call_value()
         if self.Type == 'P':
-            return self._put_value() 
-
+            return self._put_value()
 
 
     def setSpot(self, spot):
@@ -357,3 +354,4 @@ class OptionPosition:
 
 
 
+ 
