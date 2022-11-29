@@ -5,7 +5,6 @@ import numpy as np
 
 '''
     TODO
-        >THETA Greek is wrong (I dont know why)
 '''
 class BsmOption:
     def __init__(self, isLong, Type, S, K, T, r, sigma=-1.0, value=-1.0, q=0.0):
@@ -152,9 +151,11 @@ class BsmOption:
             theta = (-np.exp(-self.q * self.T) * ((self.S * self.N_prime(self.d1()) * self.sigma)/(2 * np.sqrt(self.T)))) - (self.r * self.K * np.exp(-self.r * self.T) * self.N(self.d2())) + (self.q * self.S * np.exp(-self.q * self.T) * self.N(self.d1()))
         if self.Type == 'P':
             theta = (-np.exp(-self.q * self.T) * ((self.S * self.N_prime(self.d1()) * self.sigma)/(2 * np.sqrt(self.T)))) + (self.r * self.K * np.exp(-self.r * self.T) * self.N(-self.d2())) - (self.q * self.S * np.exp(-self.q * self.T) * self.N(-self.d1()))
-        
+
+        theta /= 365
+
         if (self.isLong):
-            return theta
+            return theta 
 
         return theta * -1
 
@@ -353,3 +354,23 @@ class OptionPosition:
 
 
 
+position = OptionPosition()
+option = BsmOption(True, 'C', 15.5, 15, 53, 0.05, sigma=0.636)
+
+print("Price = " + str(option.price()))
+print("Sigma = " + str(option.sigma))
+print("Delta = " + str(option.delta()))
+print("Gamma = " + str(option.gamma()))
+print("Vega  = " + str(option.vega()))
+print("Theta = " + str(option.theta()))
+print("Rho   = " + str(option.rho()))
+
+'''put = BsmOption(False, 'P', 15.00, 15, 53, 0.01, value=1.68)
+position.addLegs([call, put])
+print("Price = " + str(position.price()))
+print("Sigma = " + str(position.sigma()))
+print("Delta = " + str(position.delta()))
+print("Gamma = " + str(position.gamma()))
+print("Vega  = " + str(position.vega()))
+print("Theta = " + str(position.theta()))
+print("Rho   = " + str(position.rho()))'''
