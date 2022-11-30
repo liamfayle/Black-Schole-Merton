@@ -213,10 +213,14 @@ class BsmOption:
         >Bug with greeks (delta & gamma) when init with market price rather than vol
 '''
 class OptionPosition:
-    def __init__(self):
+    def __init__(self, options):
+        '''
+        option -> BSM option object LIST \n
+        '''
         self.legs = []
         self.shares = 0
-        pass
+        for option in options:
+            self.legs.append(option)
 
 
     def addLegs(self, options):
