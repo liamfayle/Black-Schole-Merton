@@ -7,17 +7,17 @@ import numpy as np
 class BsmOption:
     def __init__(self, isLong, Type, S, K, T, r, sigma=-1.0, value=-1.0, q=0.0):
         '''
-        NOTE Only sigma OR value should be passed to the constructor
+        NOTE Only sigma OR value should be passed to the constructor \n
 
-        isLong -> Long / short          [bool]          [False]         Short the option
-        Type -> 'P' or 'C'              [Char]          ['P']           Put option
+        isLong -> Long / short          [bool]          [False]         Short the option                \n
+        Type -> 'P' or 'C'              [Char]          ['P']           Put option                      \n
         S -> Underlying Price           [$]             [100]           100$ Underlying                 \n
         K -> Strike                     [$]             [110]           110$ Strike                     \n
         T -> Time until expiration      [Decimal]       [20]            20 DTE                          \n
         r -> Risk free rate             [Decimal]       [0.01]          1% RFR Continous yield          \n
         sigma -> Volatility             [Decimal]       [0.45]          45% Vol                         \n
         value -> Option Price           [$]             [1.56]          1.56$                           \n
-        q -> Dividend Value             [Decimal]       [0.01]          1% Continous Div yield            
+        q -> Dividend Value             [Decimal]       [0.01]          1% Continous Div yield         \n   
         '''
         self.isLong = isLong
         self.Type = Type.upper()
@@ -65,9 +65,9 @@ class BsmOption:
 
     def NewtonRaphson(self):
         '''
-        https://en.wikipedia.org/wiki/Newton%27s_method
-        Get approximate sigma using Newton Raphson Method for root finding
-        Iterates until 0.1% accuracy
+        https://en.wikipedia.org/wiki/Newton%27s_method \n
+        Get approximate sigma using Newton Raphson Method for root finding \n
+        Iterates until 0.1% accuracy \n
         '''
         sigma_i_1 = 0
         sigma_i = 1 #arbitrary guess
@@ -188,19 +188,19 @@ class BsmOption:
 
     def setSpot(self, spot):
         '''
-        Sets new spot price
+        Sets new spot price \n
         '''
         self.S = spot
 
     def setDTE(self, DTE):
         '''
-        Sets new DTE
+        Sets new DTE \n
         '''
         self.T = DTE / 365
 
     def setSigma(self, sigma):
         '''
-        Sets new volatility value
+        Sets new volatility value \n
         '''
         self.sigma = sigma
 
@@ -213,7 +213,7 @@ class BsmOption:
         >Bug with greeks (delta & gamma) when init with market price rather than vol
 '''
 class OptionPosition:
-    def __init__(self, options):
+    def __init__(self, options=[]):
         '''
         option -> BSM option object LIST \n
         '''
@@ -226,7 +226,7 @@ class OptionPosition:
     def addLegs(self, options):
         '''
         option -> BSM option object LIST \n
-        adds option leg to position
+        adds option leg to position \n
         '''
         for option in options:
             self.legs.append(option)
@@ -234,21 +234,21 @@ class OptionPosition:
     def addShares(self, shares):
         '''
         shares -> Num shares \n
-        adds shares to position
+        adds shares to position \n
         '''
         self.shares += shares
 
     def removeShares(self, shares):
         '''
         shares -> Num shares \n
-        removes shares from position
+        removes shares from position \n
         '''
         self.shares -= shares
 
     def removeLeg(self, option):
         '''
-        option -> BSM option object to be removed
-        Removes leg from position
+        option -> BSM option object to be removed \n
+        Removes leg from position \n
         '''
         try:
             self.legs.remove(option)
@@ -257,7 +257,7 @@ class OptionPosition:
 
     def getLeg(self, index):
         '''
-        Get leg at specified index
+        Get leg at specified index \n
         '''
         if (index > len(self.legs)):
             raise Exception("Cannot get index greater than size")
@@ -266,7 +266,7 @@ class OptionPosition:
 
     def price(self):
         '''
-        Returns current theoretical price of position
+        Returns current theoretical price of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -275,7 +275,7 @@ class OptionPosition:
 
     def delta(self):
         '''
-        Returns current delta of position
+        Returns current delta of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -285,7 +285,7 @@ class OptionPosition:
 
     def gamma(self):
         '''
-        Returns current gamma of position
+        Returns current gamma of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -294,7 +294,7 @@ class OptionPosition:
 
     def vega(self):
         '''
-        Returns current vega of position
+        Returns current vega of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -303,7 +303,7 @@ class OptionPosition:
 
     def theta(self):
         '''
-        Returns current theta of position
+        Returns current theta of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -312,7 +312,7 @@ class OptionPosition:
 
     def rho(self):
         '''
-        Returns current rho of position
+        Returns current rho of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -321,7 +321,7 @@ class OptionPosition:
 
     def sigma(self):
         '''
-        Returns average sigma of position
+        Returns average sigma of position \n
         '''
         value = 0
         for leg in self.legs:
@@ -331,21 +331,21 @@ class OptionPosition:
 
     def updateDTE(self, DTE):
         '''
-        Updates DTE of !ALL! options in position
+        Updates DTE of !ALL! options in position \n
         '''
         for leg in self.legs:
             leg.setDTE(DTE)
 
     def updateSigma(self, DTE):
         '''
-        Updates DTE of !ALL! options in position
+        Updates DTE of !ALL! options in position \n
         '''
         for leg in self.legs:
             leg.setSigma(DTE)
 
     def updateSpot(self, spot):
         '''
-        Updates Spot price of !ALL! options in position
+        Updates Spot price of !ALL! options in position \n
         '''
         for leg in self.legs:
             leg.setSpot(spot)
