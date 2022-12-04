@@ -5,7 +5,7 @@ import numpy as np
     TODO
 '''
 class BsmOption:
-    def __init__(self, isLong, Type, S, K, T, r, sigma=-1.0, value=-1.0, q=0.0):
+    def __init__(self, isLong, Type, S, K, T, r, sigma=None, value=None, q=0.0):
         '''
         NOTE Only sigma OR value should be passed to the constructor \n
 
@@ -30,10 +30,10 @@ class BsmOption:
         self.value = value
 
         #Get sigma from market price
-        if (sigma < 0.0):
+        if sigma is None:
             self.NewtonRaphson()
 
-        if (value < 0.0):
+        if value is None:
             self.value = self.price()
 
         if (type(self.isLong) is not bool or type(self.Type) is not str):
@@ -349,6 +349,23 @@ class OptionPosition:
         '''
         for leg in self.legs:
             leg.setSpot(spot)
+
+    def updateSpotReturnPrice(self, spot):
+        '''
+        Updates Spot price of !ALL! options in position and returns new price \n
+        '''
+        for leg in self.legs:
+            leg.setSpot(spot)
+        return self.price()
+
+    def getSpot(self):
+        return self.legs[0].S
+    
+    def getR(self):
+        return self.legs[0].r
+
+    def getDTE(self):
+        return self.legs[0].T * 365
 
     
 
