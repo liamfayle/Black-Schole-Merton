@@ -359,12 +359,21 @@ class OptionPosition:
         return self.price()
 
     def getSpot(self):
+        '''
+        Return spot price of first leg.
+        '''
         return self.legs[0].S
     
     def getR(self):
+        '''
+        Return RFR of first leg.
+        '''
         return self.legs[0].r
 
     def getDTE(self):
+        '''
+        Return DTE of first leg
+        '''
         return self.legs[0].T * 365
 
     
