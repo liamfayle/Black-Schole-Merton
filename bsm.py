@@ -210,7 +210,6 @@ class BsmOption:
     TODO
         >Add selector for individual option
             *Can then call indivudal update functions that option
-        >Bug with greeks (delta & gamma) when init with market price rather than vol
 '''
 class OptionPosition:
     def __init__(self, options=[]):
