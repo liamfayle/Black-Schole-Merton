@@ -9,7 +9,7 @@ Based on the popular European option pricing model [Black-Scholes-Merton.](https
 #Option init using market value
 option = BsmOption(True, 'C', 8.86, 10, 18, 0.06, value=2.70)
 print("Price = " + str(option.price()))
-print("Sigma = " + str(option.sigma))
+print("Sigma = " + str(option.sigma()))
 print("Delta = " + str(option.delta()))
 print("Gamma = " + str(option.gamma()))
 print("Vega  = " + str(option.vega()))
